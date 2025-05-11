@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HMD</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            background-color: pink;
+        }
+        #message {
+            position: absolute;
+            width: 100%;
+            top: 25%;
+            text-align: center;
+            font-size: 32px;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            text-shadow: 2px 2px 4px black;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+            z-index: 10;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="message">Happy Mother's Day!</div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const message = document.getElementById("message");
+
+        // Автоматично встановити розмір під розмір екрана
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        // Центр канвасу
+        let cx = canvas.width / 2;
+        let cy = canvas.height / 2;
+
+        // Серце
+        let t = 0;
+        const step = 0.05;
+        const points = [];
+
+        function animateHeart() {
+            if (t <= 2 * Math.PI) {
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+                const canvasX = cx + x * 10;
+                const canvasY = cy - y * 10;
+                points.push({ x: canvasX, y: canvasY });
+
+                ctx.fillStyle = "red";
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.closePath();
+                ctx.fill();
+
+                t += step / 2;
+                requestAnimationFrame(animateHeart);
+            } else {
+                message.style.opacity = 1;
+                setTimeout(placeOneFlower, 500);
+            }
+        }
+
+        function drawFlower(x, y, color) {
+            ctx.fillStyle = color;
+            for (let angle = 0; angle < 360; angle += 60) {
+                const rad = angle * Math.PI / 180;
+                const fx = x + Math.cos(rad) * 16;
+                const fy = y + Math.sin(rad) * 16;
+                ctx.beginPath();
+                ctx.ellipse(fx, fy, 8, 8, 0, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = "gold";
+            ctx.fill();
+        }
+
+        function isValidPosition(x, y) {
+            const dx = x - cx;
+            const dy = y - cy;
+            const r = Math.sqrt(dx * dx + dy * dy);
+            const textTop = canvas.height * 0.15;
+            const textBottom = textTop + 60;
+            const textLeft = canvas.width / 2 - 200;
+            const textRight = canvas.width / 2 + 200;
+
+            // уникаємо перекриття серця й тексту
+            if (r < 130) return false;
+            if (y > textTop && y < textBottom && x > textLeft && x < textRight) return false;
+            return true;
+        }
+
+        const colors = ["lightblue", "lavender", "white", "yellow", "peachpuff", "violet", "lightgreen"];
+        let flowerCount = 0;
+
+        function placeOneFlower() {
+            if (flowerCount >= 60) return;
+            let tries = 0;
+            while (tries < 20) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                if (isValidPosition(x, y)) {
+                    drawFlower(x, y, colors[Math.floor(Math.random() * colors.length)]);
+                    flowerCount++;
+                    break;
+                }
+                tries++;
+            }
+            setTimeout(placeOneFlower, 40);
+        }
+
+        window.onload = () => {
+            cx = canvas.width / 2;
+            cy = canvas.height / 2;
+            animateHeart();
+        };
+    </script>
+</body>
+</html>
